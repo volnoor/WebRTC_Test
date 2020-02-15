@@ -4,6 +4,10 @@ android {
     compileSdkVersion Versions.compileSdkVersion
     buildToolsVersion Versions.buildToolsVersion
 
+    dataBinding {
+        enabled = true
+    }
+
     defaultConfig {
         applicationId "com.volnoor.webrtctest"
         minSdkVersion Versions.minSdkVersion
