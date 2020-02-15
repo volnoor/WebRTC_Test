@@ -1,2 +1,2 @@
-include ':app'
+include ':app_webrtc_test', ':lib_webrtc_test'
 rootProject.name='WebRTC_Test'

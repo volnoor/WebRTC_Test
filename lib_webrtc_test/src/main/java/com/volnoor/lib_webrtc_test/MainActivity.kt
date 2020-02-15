@@ -1,4 +1,4 @@
-package com.volnoor.webrtctest
+package com.volnoor.lib_webrtc_test
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
