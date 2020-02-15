@@ -1,5 +1,6 @@
 package com.volnoor.lib_webrtc_test.ui.base
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -8,17 +9,30 @@ import androidx.annotation.LayoutRes
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModel
 
-abstract class BaseFragment<B : ViewDataBinding, V : ViewModel> : Fragment() {
+abstract class BaseFragment<B : ViewDataBinding, V : BaseViewModel<out BaseNavigator>>
+    : Fragment() {
 
     private lateinit var binding: B
     private lateinit var viewModel: V
+    protected lateinit var screenNavigation: ScreenNavigation
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        var fragment = parentFragment
+        while (fragment != null) {
+            if (fragment is ScreenNavigation) {
+                screenNavigation = fragment
+                break
+            }
+            fragment = fragment.parentFragment
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        viewModel = getViewModel();
+        viewModel = getViewModel()
     }
 
     override fun onCreateView(

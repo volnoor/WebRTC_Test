@@ -7,10 +7,13 @@ import androidx.lifecycle.ViewModelProvider
 import com.volnoor.lib_webrtc_test.BR
 import com.volnoor.lib_webrtc_test.R
 import com.volnoor.lib_webrtc_test.databinding.FragmentMainBinding
+import com.volnoor.lib_webrtc_test.ui.base.BackPressureHandler
 import com.volnoor.lib_webrtc_test.ui.base.BaseFragment
+import com.volnoor.lib_webrtc_test.ui.base.ScreenNavigation
 import com.volnoor.lib_webrtc_test.ui.configuration.ConfigurationFragment
 
-class MainFragment : BaseFragment<FragmentMainBinding, MainViewModel>() {
+class MainFragment : BaseFragment<FragmentMainBinding, MainViewModel>(), ScreenNavigation,
+    BackPressureHandler {
 
     override fun getLayoutId() = R.layout.fragment_main
 
@@ -27,13 +30,36 @@ class MainFragment : BaseFragment<FragmentMainBinding, MainViewModel>() {
         showFragment(fragment)
     }
 
-    private fun showFragment(fragment: Fragment) {
+    override fun showFragment(fragment: Fragment) {
         childFragmentManager.beginTransaction()
-            .replace(R.id.layout_container, fragment)
+            .replace(R.id.layout_container, fragment, TAG_TOP_FRAGMENT)
+            .addToBackStack(null)
             .commit()
     }
 
+    override fun handleBackPressure(): Boolean {
+        val fragment = childFragmentManager.findFragmentByTag(TAG_TOP_FRAGMENT)
+
+        var handled = false
+        if (fragment is BackPressureHandler) {
+            handled = fragment.handleBackPressure()
+        }
+
+        if (handled) {
+            return true // Child fragment has handled back pressure
+        }
+
+        if (childFragmentManager.backStackEntryCount > 1) {
+            childFragmentManager.popBackStack()
+            return true
+        }
+
+        return false
+    }
+
     companion object {
+
+        private const val TAG_TOP_FRAGMENT = "TAG_TOP_FRAGMENT"
 
         @JvmStatic
         fun newInstance() = MainFragment()
