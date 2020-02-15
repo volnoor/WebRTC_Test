@@ -32,7 +32,6 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
-
     testImplementation Dependencies.junit
     androidTestImplementation Dependencies.android_junit
     androidTestImplementation Dependencies.espresso_core
@@ -42,6 +41,8 @@ dependencies {
     implementation Dependencies.androidx_ktx
     implementation Dependencies.androidx_constraint_layout
     implementation Dependencies.androidx_support_v4
+    implementation Dependencies.androidx_lifecycle
+    kapt Dependencies.androidx_lifecycle_compiler
 
     kapt Dependencies.databinding
 }

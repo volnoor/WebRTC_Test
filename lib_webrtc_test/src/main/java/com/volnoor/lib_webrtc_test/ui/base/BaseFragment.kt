@@ -8,10 +8,18 @@ import androidx.annotation.LayoutRes
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModel
 
-abstract class BaseFragment<B : ViewDataBinding> : Fragment() {
+abstract class BaseFragment<B : ViewDataBinding, V : ViewModel> : Fragment() {
 
     private lateinit var binding: B
+    private lateinit var viewModel: V
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        viewModel = getViewModel();
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -20,9 +28,16 @@ abstract class BaseFragment<B : ViewDataBinding> : Fragment() {
     ): View {
 
         binding = DataBindingUtil.inflate(inflater, getLayoutId(), container, false)
+        binding.setVariable(getBindingVariable(), viewModel)
+        binding.executePendingBindings()
+
         return binding.root
     }
 
     @LayoutRes
-    abstract fun getLayoutId(): Int
+    protected abstract fun getLayoutId(): Int
+
+    protected abstract fun getViewModel(): V
+
+    protected abstract fun getBindingVariable(): Int
 }
