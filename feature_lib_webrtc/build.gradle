@@ -1,15 +1,8 @@
 apply plugin: 'com.android.library'
-apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
-apply plugin: "kotlin-kapt"
 
 android {
     compileSdkVersion Versions.compileSdkVersion
     buildToolsVersion Versions.buildToolsVersion
-
-    dataBinding {
-        enabled = true
-    }
 
     defaultConfig {
         minSdkVersion Versions.minSdkVersion
@@ -32,19 +25,8 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
-    implementation project(":feature_lib_webrtc")
-
+    implementation Dependencies.androidx_appcompat
     testImplementation Dependencies.junit
     androidTestImplementation Dependencies.android_junit
     androidTestImplementation Dependencies.espresso_core
-
-    implementation Dependencies.kotlin_stdlib
-    implementation Dependencies.androidx_appcompat
-    implementation Dependencies.androidx_ktx
-    implementation Dependencies.androidx_constraint_layout
-    implementation Dependencies.androidx_support_v4
-    implementation Dependencies.androidx_lifecycle
-    kapt Dependencies.androidx_lifecycle_compiler
-
-    kapt Dependencies.databinding
 }

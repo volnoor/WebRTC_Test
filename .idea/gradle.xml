@@ -10,6 +10,7 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app_webrtc_test" />
             <option value="$PROJECT_DIR$/buildSrc" />
+            <option value="$PROJECT_DIR$/feature_lib_webrtc" />
             <option value="$PROJECT_DIR$/lib_webrtc_test" />
           </set>
         </option>
