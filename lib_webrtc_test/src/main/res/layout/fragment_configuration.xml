@@ -18,16 +18,31 @@
         tools:context=".ui.configuration.ConfigurationFragment">
 
         <EditText
-            android:id="@+id/et_room"
+            android:id="@+id/et_room_url"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:hint="Room name"
-            android:afterTextChanged="@{viewModel.roomTextChangeListener}"
-            app:layout_constraintBottom_toTopOf="@+id/btn_join"
+            android:afterTextChanged="@{viewModel.roomUrlTextChangeListener}"
+            android:hint="Room URL"
+            android:text="@{viewModel.textRoomUrl}"
+            app:layout_constraintBottom_toTopOf="@+id/et_room_id"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_chainStyle="packed" />
+
+        <EditText
+            android:id="@+id/et_room_id"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:afterTextChanged="@{viewModel.roomIdTextChangeListener}"
+            android:hint="Room id"
+            android:text="@{viewModel.textRoomId}"
+            app:layout_constraintBottom_toTopOf="@+id/btn_join"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/et_room_url"
             app:layout_constraintVertical_chainStyle="packed" />
 
         <Button
@@ -40,36 +55,8 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/et_room"
+            app:layout_constraintTop_toBottomOf="@+id/et_room_id"
             app:layout_constraintVertical_chainStyle="packed" />
-
-        <FrameLayout
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:background="#7f000000"
-            android:visibility="@{viewModel.isLoading ? View.VISIBLE : View.GONE}"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:visibility="visible">
-
-            <ProgressBar
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-        </FrameLayout>
-
-        <androidx.constraintlayout.widget.Group
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:visibility="@{viewModel.isLoading ? View.GONE : View.VISIBLE}"
-            app:constraint_referenced_ids="btn_join,et_room" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.tbruyelle.rxpermissions2.RxPermissions
 import com.volnoor.lib_webrtc_test.BR
 import com.volnoor.lib_webrtc_test.R
+import com.volnoor.lib_webrtc_test.data.RoomConfiguration
 import com.volnoor.lib_webrtc_test.databinding.FragmentConfigurationBinding
 import com.volnoor.lib_webrtc_test.ui.base.BaseFragment
 import com.volnoor.lib_webrtc_test.ui.call.CallFragment
@@ -29,8 +30,8 @@ class ConfigurationFragment : BaseFragment<FragmentConfigurationBinding, Configu
 
     override fun getBindingVariable() = BR.viewModel
 
-    override fun showCallScreen() {
-        val fragment = CallFragment.newInstance()
+    override fun showCallScreen(configuration: RoomConfiguration) {
+        val fragment = CallFragment.newInstance(configuration)
         screenNavigation.showFragment(fragment)
     }
 

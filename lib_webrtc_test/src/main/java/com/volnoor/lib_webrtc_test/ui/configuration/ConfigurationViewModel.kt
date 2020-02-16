@@ -4,29 +4,38 @@ import android.Manifest
 import android.util.Log
 import androidx.databinding.ObservableField
 import androidx.databinding.adapters.TextViewBindingAdapter
+import com.volnoor.lib_webrtc_test.data.RoomConfiguration
 import com.volnoor.lib_webrtc_test.ui.base.BaseViewModel
 
 class ConfigurationViewModel : BaseViewModel<ConfigurationNavigator>() {
 
-    val isLoading = ObservableField<Boolean>()
+    val textRoomUrl = ObservableField<String>().apply { set("https://appr.tc") }
+    val textRoomId = ObservableField<String>().apply { set("") }
 
-    private var textRoom: String? = null
-
-    val roomTextChangeListener = TextViewBindingAdapter.AfterTextChanged() { text ->
+    val roomUrlTextChangeListener = TextViewBindingAdapter.AfterTextChanged() { text ->
         Log.d(TAG, "afterTextChanged: $text")
-        textRoom = text.toString()
+        textRoomUrl.set(text.toString())
+    }
+
+    val roomIdTextChangeListener = TextViewBindingAdapter.AfterTextChanged() { text ->
+        Log.d(TAG, "afterTextChanged: $text")
+        textRoomId.set(text.toString())
     }
 
     fun onJoinClicked() {
-        Log.d(TAG, "onJoinClicked: $textRoom")
+        Log.d(TAG, "onJoinClicked: $textRoomUrl")
 
         val disposable = getNavigator().getRxPermissions().requestEachCombined(
             Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO,
             Manifest.permission.WRITE_EXTERNAL_STORAGE
         ).subscribe { permissions ->
             if (permissions.granted) {
-                isLoading.set(true)
-                getNavigator().showCallScreen()
+                getNavigator().showCallScreen(
+                    RoomConfiguration(
+                        textRoomUrl.get()!!,
+                        textRoomId.get()!!
+                    )
+                )
             }
         }
     }

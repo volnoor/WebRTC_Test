@@ -44,10 +44,13 @@ class CallViewModel : BaseViewModel<CallNavigator>() {
         )
     }
 
-    private fun getRoomConnectionParameters() = AppRTCClient.RoomConnectionParameters(
-        "https://appr.tc", // TODO
-        "test1111111111111111111", false, null
-    )
+    private fun getRoomConnectionParameters(): AppRTCClient.RoomConnectionParameters {
+        val configuration = getNavigator().getConfiguration()
+
+        return AppRTCClient.RoomConnectionParameters(
+            configuration.roomUrl, configuration.roomId, false, null
+        )
+    }
 
     companion object {
 
