@@ -14,6 +14,16 @@ android {
         consumerProguardFiles 'consumer-rules.pro'
     }
 
+    sourceSets.main {
+        jniLibs.srcDir 'libs'
+        jni.srcDirs = [] //disable automatic ndk-build call
+    }
+
+    compileOptions {
+        sourceCompatibility Versions.sourceCompatibility
+        targetCompatibility Versions.targetCompatibility
+    }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -23,10 +33,11 @@ android {
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    api fileTree(dir: 'libs', include: ['*.jar'])
 
-    implementation Dependencies.androidx_appcompat
     testImplementation Dependencies.junit
     androidTestImplementation Dependencies.android_junit
     androidTestImplementation Dependencies.espresso_core
+
+    implementation Dependencies.androidx_appcompat
 }

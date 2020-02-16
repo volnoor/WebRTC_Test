@@ -1,3 +1,5 @@
+import org.gradle.api.JavaVersion
+
 object Versions {
 
     val versionCode = 1
@@ -7,6 +9,10 @@ object Versions {
     val minSdkVersion = 14
     val targetSdkVersion = 29
 
+    val sourceCompatibility = JavaVersion.VERSION_1_8
+    val targetCompatibility = JavaVersion.VERSION_1_8
+    val jvmTarget = "1.8"
+
     val gradle_plugin = "3.5.3"
     val kotlin = "1.3.61"
     val appcompat = "1.1.0"
@@ -14,6 +20,8 @@ object Versions {
     val constraint_layout = "1.1.3"
     val support_v4 = "1.0.0"
     val lifecycle = "2.2.0"
+    val rxjava_2 = "2.2.17"
+    val rx_permissions = "0.10.2"
 
     val junit = "4.13"
     val android_junit = "1.1.1"
@@ -29,6 +37,8 @@ object Dependencies {
     val androidx_support_v4 = "androidx.legacy:legacy-support-v4:${Versions.support_v4}"
     val androidx_lifecycle = "androidx.lifecycle:lifecycle-extensions:${Versions.lifecycle}"
     val androidx_lifecycle_compiler = "androidx.lifecycle:lifecycle-compiler:${Versions.lifecycle}"
+    val rxjava = "io.reactivex.rxjava2:rxjava:${Versions.rxjava_2}"
+    val rx_permissions = "com.github.tbruyelle:rxpermissions:${Versions.rx_permissions}"
 
     val junit = "junit:junit:${Versions.junit}"
     val android_junit = "androidx.test.ext:junit:${Versions.android_junit}"

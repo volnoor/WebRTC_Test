@@ -8,9 +8,17 @@ class WebRTCTestApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         Log.d(TAG, "onCreate")
+        instance = this;
     }
 
     companion object {
-        const val TAG = "WebRTCTestApplication"
+
+        private const val TAG = "WebRTCTestApplication"
+
+        private lateinit var instance: WebRTCTestApplication
+
+        @JvmStatic
+        fun getInstance() = instance
+
     }
 }

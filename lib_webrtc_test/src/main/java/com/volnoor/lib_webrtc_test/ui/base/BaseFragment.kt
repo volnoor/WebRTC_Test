@@ -13,7 +13,7 @@ import androidx.fragment.app.Fragment
 abstract class BaseFragment<B : ViewDataBinding, V : BaseViewModel<out BaseNavigator>>
     : Fragment() {
 
-    private lateinit var binding: B
+    protected lateinit var binding: B
     private lateinit var viewModel: V
     protected lateinit var screenNavigation: ScreenNavigation
 

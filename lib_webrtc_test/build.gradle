@@ -21,6 +21,15 @@ android {
         consumerProguardFiles 'consumer-rules.pro'
     }
 
+    compileOptions {
+        sourceCompatibility Versions.sourceCompatibility
+        targetCompatibility Versions.targetCompatibility
+    }
+
+    kotlinOptions {
+        jvmTarget = Versions.jvmTarget
+    }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -44,7 +53,9 @@ dependencies {
     implementation Dependencies.androidx_constraint_layout
     implementation Dependencies.androidx_support_v4
     implementation Dependencies.androidx_lifecycle
-    kapt Dependencies.androidx_lifecycle_compiler
+    implementation Dependencies.rxjava
+    implementation Dependencies.rx_permissions
 
+    kapt Dependencies.androidx_lifecycle_compiler
     kapt Dependencies.databinding
 }

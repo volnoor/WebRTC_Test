@@ -1,5 +1,6 @@
 package com.volnoor.lib_webrtc_test.ui.configuration
 
+import android.Manifest
 import android.util.Log
 import androidx.databinding.ObservableField
 import androidx.databinding.adapters.TextViewBindingAdapter
@@ -19,7 +20,15 @@ class ConfigurationViewModel : BaseViewModel<ConfigurationNavigator>() {
     fun onJoinClicked() {
         Log.d(TAG, "onJoinClicked: $textRoom")
 
-        isLoading.set(true)
+        val disposable = getNavigator().getRxPermissions().requestEachCombined(
+            Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+        ).subscribe { permissions ->
+            if (permissions.granted) {
+                isLoading.set(true)
+                getNavigator().showCallScreen()
+            }
+        }
     }
 
     companion object {
