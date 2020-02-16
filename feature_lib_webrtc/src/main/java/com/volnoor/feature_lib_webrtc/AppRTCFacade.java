@@ -1,9 +1,6 @@
 package com.volnoor.feature_lib_webrtc;
 
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -39,6 +36,7 @@ public class AppRTCFacade implements AppRTCClient.SignalingEvents, PeerConnectio
     private PeerConnectionClient.PeerConnectionParameters peerConnectionParameters;
     private PeerConnectionClient peerConnectionClient;
     private EglBase rootEglBase;
+    private AppRTCAudioManager audioManager;
     private final ProxyRenderer remoteProxyRenderer = new ProxyRenderer();
     private final ProxyRenderer localProxyRenderer = new ProxyRenderer();
     private final List<VideoRenderer.Callbacks> remoteRenderers =
@@ -102,7 +100,7 @@ public class AppRTCFacade implements AppRTCClient.SignalingEvents, PeerConnectio
 
         // Create and audio manager that will take care of audio routing,
         // audio modes, audio device enumeration etc.
-        AppRTCAudioManager audioManager = AppRTCAudioManager.create(context);
+        audioManager = AppRTCAudioManager.create(context);
         // Store existing audio settings and change audio mode to
         // MODE_IN_COMMUNICATION for best possible VoIP performance.
         Log.d(TAG, "Starting the audio manager...");
@@ -344,9 +342,10 @@ public class AppRTCFacade implements AppRTCClient.SignalingEvents, PeerConnectio
                 return null;
             }
         } else */
-    /*    if (*//*screencaptureEnabled &&*//* Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        /*    if (*//*screencaptureEnabled &&*//* Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             // return createScreenCapturer();
-        } else*/ if (useCamera2()) {
+        } else*/
+        if (useCamera2()) {
             if (!captureToTexture()) {
                 // reportError(getString(R.string.camera2_texture_only_error));
                 return null;
@@ -470,39 +469,33 @@ public class AppRTCFacade implements AppRTCClient.SignalingEvents, PeerConnectio
 
     // Disconnect from remote resources, dispose of local resources, and exit.
     private void disconnect() {
-//        activityRunning = false;
-//        remoteProxyRenderer.setTarget(null);
-//        localProxyRenderer.setTarget(null);
-//        if (appRtcClient != null) {
-//            appRtcClient.disconnectFromRoom();
-//            appRtcClient = null;
-//        }
-//        if (peerConnectionClient != null) {
-//            peerConnectionClient.close();
-//            peerConnectionClient = null;
-//        }
-//        if (pipRenderer != null) {
-//            pipRenderer.release();
-//            pipRenderer = null;
-//        }
-//        if (videoFileRenderer != null) {
-//            videoFileRenderer.release();
-//            videoFileRenderer = null;
-//        }
-//        if (fullscreenRenderer != null) {
-//            fullscreenRenderer.release();
-//            fullscreenRenderer = null;
-//        }
-//        if (audioManager != null) {
-//            audioManager.stop();
-//            audioManager = null;
-//        }
-//        if (iceConnected && !isError) {
-//            setResult(RESULT_OK);
-//        } else {
-//            setResult(RESULT_CANCELED);
-//        }
-//        finish();
+        remoteProxyRenderer.setTarget(null);
+        localProxyRenderer.setTarget(null);
+        if (appRtcClient != null) {
+            appRtcClient.disconnectFromRoom();
+            appRtcClient = null;
+        }
+        if (peerConnectionClient != null) {
+            peerConnectionClient.close();
+            peerConnectionClient = null;
+        }
+        if (pipRenderer != null) {
+            pipRenderer.release();
+            pipRenderer = null;
+        }
+        if (fullscreenRenderer != null) {
+            fullscreenRenderer.release();
+            fullscreenRenderer = null;
+        }
+        if (audioManager != null) {
+            audioManager.stop();
+            audioManager = null;
+        }
+    }
+
+    public void dispose() {
+        disconnect();
+        rootEglBase.release();
     }
 
     // Should be called from UI thread

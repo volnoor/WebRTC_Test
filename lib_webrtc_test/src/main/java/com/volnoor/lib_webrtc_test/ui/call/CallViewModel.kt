@@ -8,10 +8,12 @@ import com.volnoor.lib_webrtc_test.ui.base.BaseViewModel
 
 class CallViewModel : BaseViewModel<CallNavigator>() {
 
+    private lateinit var facade: AppRTCFacade
+
     fun onViewCreated() {
         Log.d(TAG, "onViewCreated")
 
-        val facade = AppRTCFacade(
+        facade = AppRTCFacade(
             getNavigator().getContext(),
             getNavigator().getFullscreenRendererView(), getNavigator()
                 .getPipRendererView(), getPeerConnectionParameters(), getRoomConnectionParameters()
@@ -50,6 +52,11 @@ class CallViewModel : BaseViewModel<CallNavigator>() {
         return AppRTCClient.RoomConnectionParameters(
             configuration.roomUrl, configuration.roomId, false, null
         )
+    }
+
+    override fun onCleared() {
+        Log.d(TAG, "onCleared")
+        facade.dispose()
     }
 
     companion object {
