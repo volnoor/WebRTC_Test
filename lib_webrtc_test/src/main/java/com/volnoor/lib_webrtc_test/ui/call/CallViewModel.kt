@@ -15,8 +15,11 @@ class CallViewModel : BaseViewModel<CallNavigator>() {
 
         facade = AppRTCFacade(
             getNavigator().getContext(),
-            getNavigator().getFullscreenRendererView(), getNavigator()
-                .getPipRendererView(), getPeerConnectionParameters(), getRoomConnectionParameters()
+            getNavigator().getFullscreenRendererView(),
+            getNavigator().getPipRendererView(),
+            getPeerConnectionParameters(),
+            getRoomConnectionParameters(),
+            getEventListener()
         )
     }
 
@@ -52,6 +55,12 @@ class CallViewModel : BaseViewModel<CallNavigator>() {
         return AppRTCClient.RoomConnectionParameters(
             configuration.roomUrl, configuration.roomId, false, null
         )
+    }
+
+    private fun getEventListener() = object : AppRTCFacade.EventListener {
+        override fun onError(error: String) {
+            getNavigator().showErrorAndGoBack(error)
+        }
     }
 
     override fun onCleared() {

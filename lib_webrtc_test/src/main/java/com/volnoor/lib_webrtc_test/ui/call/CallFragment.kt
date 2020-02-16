@@ -2,6 +2,7 @@ package com.volnoor.lib_webrtc_test.ui.call
 
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
 import androidx.lifecycle.ViewModelProvider
 import com.volnoor.lib_webrtc_test.BR
 import com.volnoor.lib_webrtc_test.R
@@ -58,5 +59,10 @@ class CallFragment : BaseFragment<FragmentCallBinding, CallViewModel>(), CallNav
 
     override fun getPipRendererView(): SurfaceViewRenderer {
         return binding.pipVideoView
+    }
+
+    override fun showErrorAndGoBack(error: String) {
+        Toast.makeText(activity, error, Toast.LENGTH_LONG).show()
+        screenNavigation.back()
     }
 }

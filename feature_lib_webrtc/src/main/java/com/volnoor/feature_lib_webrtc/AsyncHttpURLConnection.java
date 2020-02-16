@@ -41,11 +41,7 @@ public class AsyncHttpURLConnection {
     }
 
     public void send() {
-        Runnable runHttp = new Runnable() {
-            public void run() {
-                sendHttpMessage();
-            }
-        };
+        Runnable runHttp = () -> sendHttpMessage();
         new Thread(runHttp).start();
     }
 

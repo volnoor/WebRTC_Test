@@ -37,6 +37,10 @@ class MainFragment : BaseFragment<FragmentMainBinding, MainViewModel>(), ScreenN
             .commit()
     }
 
+    override fun back() {
+        activity?.onBackPressed()
+    }
+
     override fun handleBackPressure(): Boolean {
         val fragment = childFragmentManager.findFragmentByTag(TAG_TOP_FRAGMENT)
 

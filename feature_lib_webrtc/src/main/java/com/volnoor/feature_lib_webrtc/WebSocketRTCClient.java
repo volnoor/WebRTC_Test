@@ -54,22 +54,14 @@ public class WebSocketRTCClient implements AppRTCClient, WebSocketChannelClient.
     @Override
     public void connectToRoom(RoomConnectionParameters connectionParameters) {
         this.connectionParameters = connectionParameters;
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                connectToRoomInternal();
-            }
-        });
+        handler.post(() -> connectToRoomInternal());
     }
 
     @Override
     public void disconnectFromRoom() {
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                disconnectFromRoomInternal();
-                handler.getLooper().quit();
-            }
+        handler.post(() -> {
+            disconnectFromRoomInternal();
+            handler.getLooper().quit();
         });
     }
 
@@ -83,12 +75,8 @@ public class WebSocketRTCClient implements AppRTCClient, WebSocketChannelClient.
         RoomParametersFetcher.RoomParametersFetcherEvents callbacks = new RoomParametersFetcher.RoomParametersFetcherEvents() {
             @Override
             public void onSignalingParametersReady(final SignalingParameters params) {
-                WebSocketRTCClient.this.handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        WebSocketRTCClient.this.signalingParametersReady(params);
-                    }
-                });
+                WebSocketRTCClient.this.handler.post(() ->
+                        WebSocketRTCClient.this.signalingParametersReady(params));
             }
 
             @Override
@@ -170,23 +158,20 @@ public class WebSocketRTCClient implements AppRTCClient, WebSocketChannelClient.
     // Send local offer SDP to the other participant.
     @Override
     public void sendOfferSdp(final SessionDescription sdp) {
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                if (roomState != ConnectionState.CONNECTED) {
-                    reportError("Sending offer SDP in non connected state.");
-                    return;
-                }
-                JSONObject json = new JSONObject();
-                jsonPut(json, "sdp", sdp.description);
-                jsonPut(json, "type", "offer");
-                sendPostMessage(MessageType.MESSAGE, messageUrl, json.toString());
-                if (connectionParameters.loopback) {
-                    // In loopback mode rename this offer to answer and route it back.
-                    SessionDescription sdpAnswer = new SessionDescription(
-                            SessionDescription.Type.fromCanonicalForm("answer"), sdp.description);
-                    events.onRemoteDescription(sdpAnswer);
-                }
+        handler.post(() -> {
+            if (roomState != ConnectionState.CONNECTED) {
+                reportError("Sending offer SDP in non connected state.");
+                return;
+            }
+            JSONObject json = new JSONObject();
+            jsonPut(json, "sdp", sdp.description);
+            jsonPut(json, "type", "offer");
+            sendPostMessage(MessageType.MESSAGE, messageUrl, json.toString());
+            if (connectionParameters.loopback) {
+                // In loopback mode rename this offer to answer and route it back.
+                SessionDescription sdpAnswer = new SessionDescription(
+                        SessionDescription.Type.fromCanonicalForm("answer"), sdp.description);
+                events.onRemoteDescription(sdpAnswer);
             }
         });
     }
@@ -194,46 +179,40 @@ public class WebSocketRTCClient implements AppRTCClient, WebSocketChannelClient.
     // Send local answer SDP to the other participant.
     @Override
     public void sendAnswerSdp(final SessionDescription sdp) {
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                if (connectionParameters.loopback) {
-                    Log.e(TAG, "Sending answer in loopback mode.");
-                    return;
-                }
-                JSONObject json = new JSONObject();
-                jsonPut(json, "sdp", sdp.description);
-                jsonPut(json, "type", "answer");
-                wsClient.send(json.toString());
+        handler.post(() -> {
+            if (connectionParameters.loopback) {
+                Log.e(TAG, "Sending answer in loopback mode.");
+                return;
             }
+            JSONObject json = new JSONObject();
+            jsonPut(json, "sdp", sdp.description);
+            jsonPut(json, "type", "answer");
+            wsClient.send(json.toString());
         });
     }
 
     // Send Ice candidate to the other participant.
     @Override
     public void sendLocalIceCandidate(final IceCandidate candidate) {
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                JSONObject json = new JSONObject();
-                jsonPut(json, "type", "candidate");
-                jsonPut(json, "label", candidate.sdpMLineIndex);
-                jsonPut(json, "id", candidate.sdpMid);
-                jsonPut(json, "candidate", candidate.sdp);
-                if (initiator) {
-                    // Call initiator sends ice candidates to GAE server.
-                    if (roomState != ConnectionState.CONNECTED) {
-                        reportError("Sending ICE candidate in non connected state.");
-                        return;
-                    }
-                    sendPostMessage(MessageType.MESSAGE, messageUrl, json.toString());
-                    if (connectionParameters.loopback) {
-                        events.onRemoteIceCandidate(candidate);
-                    }
-                } else {
-                    // Call receiver sends ice candidates to websocket server.
-                    wsClient.send(json.toString());
+        handler.post(() -> {
+            JSONObject json = new JSONObject();
+            jsonPut(json, "type", "candidate");
+            jsonPut(json, "label", candidate.sdpMLineIndex);
+            jsonPut(json, "id", candidate.sdpMid);
+            jsonPut(json, "candidate", candidate.sdp);
+            if (initiator) {
+                // Call initiator sends ice candidates to GAE server.
+                if (roomState != ConnectionState.CONNECTED) {
+                    reportError("Sending ICE candidate in non connected state.");
+                    return;
                 }
+                sendPostMessage(MessageType.MESSAGE, messageUrl, json.toString());
+                if (connectionParameters.loopback) {
+                    events.onRemoteIceCandidate(candidate);
+                }
+            } else {
+                // Call receiver sends ice candidates to websocket server.
+                wsClient.send(json.toString());
             }
         });
     }
@@ -241,30 +220,27 @@ public class WebSocketRTCClient implements AppRTCClient, WebSocketChannelClient.
     // Send removed Ice candidates to the other participant.
     @Override
     public void sendLocalIceCandidateRemovals(final IceCandidate[] candidates) {
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                JSONObject json = new JSONObject();
-                jsonPut(json, "type", "remove-candidates");
-                JSONArray jsonArray = new JSONArray();
-                for (final IceCandidate candidate : candidates) {
-                    jsonArray.put(toJsonCandidate(candidate));
+        handler.post(() -> {
+            JSONObject json = new JSONObject();
+            jsonPut(json, "type", "remove-candidates");
+            JSONArray jsonArray = new JSONArray();
+            for (final IceCandidate candidate : candidates) {
+                jsonArray.put(toJsonCandidate(candidate));
+            }
+            jsonPut(json, "candidates", jsonArray);
+            if (initiator) {
+                // Call initiator sends ice candidates to GAE server.
+                if (roomState != ConnectionState.CONNECTED) {
+                    reportError("Sending ICE candidate removals in non connected state.");
+                    return;
                 }
-                jsonPut(json, "candidates", jsonArray);
-                if (initiator) {
-                    // Call initiator sends ice candidates to GAE server.
-                    if (roomState != ConnectionState.CONNECTED) {
-                        reportError("Sending ICE candidate removals in non connected state.");
-                        return;
-                    }
-                    sendPostMessage(MessageType.MESSAGE, messageUrl, json.toString());
-                    if (connectionParameters.loopback) {
-                        events.onRemoteIceCandidatesRemoved(candidates);
-                    }
-                } else {
-                    // Call receiver sends ice candidates to websocket server.
-                    wsClient.send(json.toString());
+                sendPostMessage(MessageType.MESSAGE, messageUrl, json.toString());
+                if (connectionParameters.loopback) {
+                    events.onRemoteIceCandidatesRemoved(candidates);
                 }
+            } else {
+                // Call receiver sends ice candidates to websocket server.
+                wsClient.send(json.toString());
             }
         });
     }
@@ -342,13 +318,10 @@ public class WebSocketRTCClient implements AppRTCClient, WebSocketChannelClient.
     // Helper functions.
     private void reportError(final String errorMessage) {
         Log.e(TAG, errorMessage);
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                if (roomState != ConnectionState.ERROR) {
-                    roomState = ConnectionState.ERROR;
-                    events.onChannelError(errorMessage);
-                }
+        handler.post(() -> {
+            if (roomState != ConnectionState.ERROR) {
+                roomState = ConnectionState.ERROR;
+                events.onChannelError(errorMessage);
             }
         });
     }

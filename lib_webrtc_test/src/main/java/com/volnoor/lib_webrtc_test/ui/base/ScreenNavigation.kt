@@ -5,4 +5,6 @@ import androidx.fragment.app.Fragment
 interface ScreenNavigation {
 
     fun showFragment(fragment: Fragment)
+
+    fun back()
 }

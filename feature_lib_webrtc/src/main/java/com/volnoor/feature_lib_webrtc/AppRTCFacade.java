@@ -43,6 +43,7 @@ public class AppRTCFacade implements AppRTCClient.SignalingEvents, PeerConnectio
             new ArrayList<VideoRenderer.Callbacks>();
     private SurfaceViewRenderer fullscreenRenderer;
     private SurfaceViewRenderer pipRenderer;
+    private EventListener listener;
 
     private long callStartedTimeMs;
     private boolean isError;
@@ -54,13 +55,15 @@ public class AppRTCFacade implements AppRTCClient.SignalingEvents, PeerConnectio
                         SurfaceViewRenderer fullscreenRenderer,
                         SurfaceViewRenderer pipRenderer,
                         PeerConnectionClient.PeerConnectionParameters peerConnectionParameters,
-                        AppRTCClient.RoomConnectionParameters roomConnectionParameters) {
+                        AppRTCClient.RoomConnectionParameters roomConnectionParameters,
+                        EventListener listener) {
 
         this.context = context;
         this.fullscreenRenderer = fullscreenRenderer;
         this.pipRenderer = pipRenderer;
         this.peerConnectionParameters = peerConnectionParameters;
         this.roomConnectionParameters = roomConnectionParameters;
+        this.listener = listener;
 
         remoteRenderers.add(remoteProxyRenderer);
 
@@ -104,15 +107,9 @@ public class AppRTCFacade implements AppRTCClient.SignalingEvents, PeerConnectio
         // Store existing audio settings and change audio mode to
         // MODE_IN_COMMUNICATION for best possible VoIP performance.
         Log.d(TAG, "Starting the audio manager...");
-        audioManager.start(new AppRTCAudioManager.AudioManagerEvents() {
-            // This method will be called each time the number of available audio
-            // devices has changed.
-            @Override
-            public void onAudioDeviceChanged(
-                    AppRTCAudioManager.AudioDevice audioDevice, Set<AppRTCAudioManager.AudioDevice> availableAudioDevices) {
-                onAudioManagerDevicesChanged(audioDevice, availableAudioDevices);
-            }
-        });
+        // This method will be called each time the number of available audio devices has changed.
+        audioManager.start((audioDevice, availableAudioDevices) ->
+                onAudioManagerDevicesChanged(audioDevice, availableAudioDevices));
     }
 
     private void logAndToast(String msg) {
@@ -158,72 +155,55 @@ public class AppRTCFacade implements AppRTCClient.SignalingEvents, PeerConnectio
 
     @Override
     public void onConnectedToRoom(AppRTCClient.SignalingParameters params) {
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                onConnectedToRoomInternal(params);
-            }
-        });
+        handler.post(() -> onConnectedToRoomInternal(params));
     }
 
     @Override
     public void onRemoteDescription(SessionDescription sdp) {
         final long delta = System.currentTimeMillis() - callStartedTimeMs;
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                if (peerConnectionClient == null) {
-                    Log.e(TAG, "Received remote SDP for non-initilized peer connection.");
-                    return;
-                }
-                logAndToast("Received remote " + sdp.type + ", delay=" + delta + "ms");
-                peerConnectionClient.setRemoteDescription(sdp);
-                if (!signalingParameters.initiator) {
-                    logAndToast("Creating ANSWER...");
-                    // Create answer. Answer SDP will be sent to offering client in
-                    // PeerConnectionEvents.onLocalDescription event.
-                    peerConnectionClient.createAnswer();
-                }
+        handler.post(() -> {
+            if (peerConnectionClient == null) {
+                Log.e(TAG, "Received remote SDP for non-initilized peer connection.");
+                return;
+            }
+            logAndToast("Received remote " + sdp.type + ", delay=" + delta + "ms");
+            peerConnectionClient.setRemoteDescription(sdp);
+            if (!signalingParameters.initiator) {
+                logAndToast("Creating ANSWER...");
+                // Create answer. Answer SDP will be sent to offering client in
+                // PeerConnectionEvents.onLocalDescription event.
+                peerConnectionClient.createAnswer();
             }
         });
     }
 
     @Override
     public void onRemoteIceCandidate(IceCandidate candidate) {
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                if (peerConnectionClient == null) {
-                    Log.e(TAG, "Received ICE candidate for a non-initialized peer connection.");
-                    return;
-                }
-                peerConnectionClient.addRemoteIceCandidate(candidate);
+        handler.post(() -> {
+            if (peerConnectionClient == null) {
+                Log.e(TAG, "Received ICE candidate for a non-initialized peer connection.");
+                return;
             }
+            peerConnectionClient.addRemoteIceCandidate(candidate);
         });
     }
 
     @Override
     public void onRemoteIceCandidatesRemoved(IceCandidate[] candidates) {
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                if (peerConnectionClient == null) {
-                    Log.e(TAG, "Received ICE candidate removals for a non-initialized peer connection.");
-                    return;
-                }
-                peerConnectionClient.removeRemoteIceCandidates(candidates);
+        handler.post(() -> {
+            if (peerConnectionClient == null) {
+                Log.e(TAG, "Received ICE candidate removals for a non-initialized peer connection.");
+                return;
             }
+            peerConnectionClient.removeRemoteIceCandidates(candidates);
         });
     }
 
     @Override
     public void onChannelClose() {
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                logAndToast("Remote end hung up; dropping PeerConnection");
-                disconnect();
-            }
+        handler.post(() -> {
+            logAndToast("Remote end hung up; dropping PeerConnection");
+            disconnect();
         });
     }
 
@@ -239,45 +219,36 @@ public class AppRTCFacade implements AppRTCClient.SignalingEvents, PeerConnectio
     @Override
     public void onLocalDescription(final SessionDescription sdp) {
         final long delta = System.currentTimeMillis() - callStartedTimeMs;
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                if (appRtcClient != null) {
-                    logAndToast("Sending " + sdp.type + ", delay=" + delta + "ms");
-                    if (signalingParameters.initiator) {
-                        appRtcClient.sendOfferSdp(sdp);
-                    } else {
-                        appRtcClient.sendAnswerSdp(sdp);
-                    }
+        handler.post(() -> {
+            if (appRtcClient != null) {
+                logAndToast("Sending " + sdp.type + ", delay=" + delta + "ms");
+                if (signalingParameters.initiator) {
+                    appRtcClient.sendOfferSdp(sdp);
+                } else {
+                    appRtcClient.sendAnswerSdp(sdp);
                 }
-                if (peerConnectionParameters.videoMaxBitrate > 0) {
-                    Log.d(TAG, "Set video maximum bitrate: " + peerConnectionParameters.videoMaxBitrate);
-                    peerConnectionClient.setVideoMaxBitrate(peerConnectionParameters.videoMaxBitrate);
-                }
+            }
+            if (peerConnectionParameters.videoMaxBitrate > 0) {
+                Log.d(TAG, "Set video maximum bitrate: " + peerConnectionParameters.videoMaxBitrate);
+                peerConnectionClient.setVideoMaxBitrate(peerConnectionParameters.videoMaxBitrate);
             }
         });
     }
 
     @Override
     public void onIceCandidate(final IceCandidate candidate) {
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                if (appRtcClient != null) {
-                    appRtcClient.sendLocalIceCandidate(candidate);
-                }
+        handler.post(() -> {
+            if (appRtcClient != null) {
+                appRtcClient.sendLocalIceCandidate(candidate);
             }
         });
     }
 
     @Override
     public void onIceCandidatesRemoved(final IceCandidate[] candidates) {
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                if (appRtcClient != null) {
-                    appRtcClient.sendLocalIceCandidateRemovals(candidates);
-                }
+        handler.post(() -> {
+            if (appRtcClient != null) {
+                appRtcClient.sendLocalIceCandidateRemovals(candidates);
             }
         });
     }
@@ -285,25 +256,19 @@ public class AppRTCFacade implements AppRTCClient.SignalingEvents, PeerConnectio
     @Override
     public void onIceConnected() {
         final long delta = System.currentTimeMillis() - callStartedTimeMs;
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                logAndToast("ICE connected, delay=" + delta + "ms");
-                iceConnected = true;
-                callConnected();
-            }
+        handler.post(() -> {
+            logAndToast("ICE connected, delay=" + delta + "ms");
+            iceConnected = true;
+            callConnected();
         });
     }
 
     @Override
     public void onIceDisconnected() {
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                logAndToast("ICE disconnected");
-                iceConnected = false;
-                disconnect();
-            }
+        handler.post(() -> {
+            logAndToast("ICE disconnected");
+            iceConnected = false;
+            disconnect();
         });
     }
 
@@ -332,52 +297,18 @@ public class AppRTCFacade implements AppRTCClient.SignalingEvents, PeerConnectio
     }
 
     private VideoCapturer createVideoCapturer() {
-        VideoCapturer videoCapturer = null;
-        //String videoFileAsCamera = getIntent().getStringExtra(EXTRA_VIDEO_FILE_AS_CAMERA);
-       /* if (videoFileAsCamera != null) {
-            try {
-                videoCapturer = new FileVideoCapturer(videoFileAsCamera);
-            } catch (IOException e) {
-                //reportError("Failed to open video file for emulated camera");
-                return null;
-            }
-        } else */
-        /*    if (*//*screencaptureEnabled &&*//* Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            // return createScreenCapturer();
-        } else*/
-        if (useCamera2()) {
-            if (!captureToTexture()) {
-                // reportError(getString(R.string.camera2_texture_only_error));
-                return null;
-            }
+        VideoCapturer videoCapturer;
 
+        if (useCamera2()) {
             Logging.d(TAG, "Creating capturer using camera2 API.");
             videoCapturer = createCameraCapturer(new Camera2Enumerator(context));
         } else {
             Logging.d(TAG, "Creating capturer using camera1 API.");
-            videoCapturer = createCameraCapturer(new Camera1Enumerator(captureToTexture()));
+            videoCapturer = createCameraCapturer(new Camera1Enumerator(true));
         }
-        if (videoCapturer == null) {
-            // reportError("Failed to open camera");
-            return null;
-        }
+
         return videoCapturer;
     }
-
-//    @TargetApi(21)
-//    private VideoCapturer createScreenCapturer() {
-//        if (mediaProjectionPermissionResultCode != Activity.RESULT_OK) {
-//            //   reportError("User didn't give permission to capture the screen.");
-//            return null;
-//        }
-//        return new ScreenCapturerAndroid(
-//                mediaProjectionPermissionResultData, new MediaProjection.Callback() {
-//            @Override
-//            public void onStop() {
-//                //  reportError("User revoked permission to capture the screen.");
-//            }
-//        });
-//    }
 
     private class ProxyRenderer implements VideoRenderer.Callbacks {
         private VideoRenderer.Callbacks target;
@@ -398,11 +329,7 @@ public class AppRTCFacade implements AppRTCClient.SignalingEvents, PeerConnectio
     }
 
     private boolean useCamera2() {
-        return Camera2Enumerator.isSupported(context) /*&& getIntent().getBooleanExtra(EXTRA_CAMERA2, true)*/;
-    }
-
-    private boolean captureToTexture() {
-        return /*getIntent().getBooleanExtra(EXTRA_CAPTURETOTEXTURE_ENABLED,*/ true;
+        return Camera2Enumerator.isSupported(context);
     }
 
     private VideoCapturer createCameraCapturer(CameraEnumerator enumerator) {
@@ -438,33 +365,16 @@ public class AppRTCFacade implements AppRTCClient.SignalingEvents, PeerConnectio
     }
 
     private void reportError(final String description) {
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                if (!isError) {
-                    isError = true;
-                    disconnectWithErrorMessage(description);
-                }
+        handler.post(() -> {
+            if (!isError) {
+                isError = true;
+                disconnectWithErrorMessage(description);
             }
         });
     }
 
-    private void disconnectWithErrorMessage(final String errorMessage) { // TODO callback for errors
-//        new AlertDialog.Builder(context)
-//                .setTitle("Error")
-//                .setMessage(errorMessage)
-//                .setCancelable(false)
-//                .setNeutralButton("Ok",
-//                        new DialogInterface.OnClickListener() {
-//                            @Override
-//                            public void onClick(DialogInterface dialog, int id) {
-//                                dialog.cancel();
-//                                disconnect();
-//                            }
-//                        })
-//                .create()
-//                .show();
-        disconnect();
+    private void disconnectWithErrorMessage(String errorMessage) {
+        listener.onError(errorMessage);
     }
 
     // Disconnect from remote resources, dispose of local resources, and exit.
@@ -518,5 +428,10 @@ public class AppRTCFacade implements AppRTCClient.SignalingEvents, PeerConnectio
         remoteProxyRenderer.setTarget(isSwappedFeeds ? pipRenderer : fullscreenRenderer);
         fullscreenRenderer.setMirror(isSwappedFeeds);
         pipRenderer.setMirror(!isSwappedFeeds);
+    }
+
+    public interface EventListener {
+
+        void onError(String error);
     }
 }

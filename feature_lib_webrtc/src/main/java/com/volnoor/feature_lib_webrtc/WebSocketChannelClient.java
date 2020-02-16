@@ -190,13 +190,10 @@ public class WebSocketChannelClient {
 
     private void reportError(final String errorMessage) {
         Log.e(TAG, errorMessage);
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                if (state != WebSocketConnectionState.ERROR) {
-                    state = WebSocketConnectionState.ERROR;
-                    events.onWebSocketError(errorMessage);
-                }
+        handler.post(() -> {
+            if (state != WebSocketConnectionState.ERROR) {
+                state = WebSocketConnectionState.ERROR;
+                events.onWebSocketError(errorMessage);
             }
         });
     }
@@ -231,14 +228,11 @@ public class WebSocketChannelClient {
         @Override
         public void onOpen() {
             Log.d(TAG, "WebSocket connection opened to: " + wsServerUrl);
-            handler.post(new Runnable() {
-                @Override
-                public void run() {
-                    state = WebSocketConnectionState.CONNECTED;
-                    // Check if we have pending register request.
-                    if (roomID != null && clientID != null) {
-                        register(roomID, clientID);
-                    }
+            handler.post(() -> {
+                state = WebSocketConnectionState.CONNECTED;
+                // Check if we have pending register request.
+                if (roomID != null && clientID != null) {
+                    register(roomID, clientID);
                 }
             });
         }
@@ -251,13 +245,10 @@ public class WebSocketChannelClient {
                 closeEvent = true;
                 closeEventLock.notify();
             }
-            handler.post(new Runnable() {
-                @Override
-                public void run() {
-                    if (state != WebSocketConnectionState.CLOSED) {
-                        state = WebSocketConnectionState.CLOSED;
-                        events.onWebSocketClose();
-                    }
+            handler.post(() -> {
+                if (state != WebSocketConnectionState.CLOSED) {
+                    state = WebSocketConnectionState.CLOSED;
+                    events.onWebSocketClose();
                 }
             });
         }
@@ -266,13 +257,10 @@ public class WebSocketChannelClient {
         public void onTextMessage(String payload) {
             Log.d(TAG, "WSS->C: " + payload);
             final String message = payload;
-            handler.post(new Runnable() {
-                @Override
-                public void run() {
-                    if (state == WebSocketConnectionState.CONNECTED
-                            || state == WebSocketConnectionState.REGISTERED) {
-                        events.onWebSocketMessage(message);
-                    }
+            handler.post(() -> {
+                if (state == WebSocketConnectionState.CONNECTED
+                        || state == WebSocketConnectionState.REGISTERED) {
+                    events.onWebSocketMessage(message);
                 }
             });
         }

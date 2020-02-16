@@ -14,4 +14,6 @@ interface CallNavigator : BaseNavigator {
     fun getFullscreenRendererView(): SurfaceViewRenderer
 
     fun getPipRendererView(): SurfaceViewRenderer
+
+    fun showErrorAndGoBack(error: String)
 }
